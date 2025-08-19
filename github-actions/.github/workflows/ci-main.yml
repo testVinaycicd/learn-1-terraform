@@ -1,0 +1,10 @@
+name: Testing actions
+on: push
+jobs:
+  Testing_actions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: check out repo
+        uses: actions/checkout@v4
+      - name: Printing statement
+        run: echo "hello world"
