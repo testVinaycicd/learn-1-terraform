@@ -1,0 +1,22 @@
+name: CI MAIN
+
+on: [push,workflow_dispatch]
+
+
+jobs:
+  testing-minikube:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: install docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          # start & enable
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          # check
+          docker --version
+          sudo docker run --rm hello-world
