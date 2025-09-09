@@ -6,6 +6,9 @@ on:
       tag:
         required: false
         type: string
+      component_name:
+        required: false
+        type: string
     secrets:
       DTKN:
         required: true
@@ -20,6 +23,8 @@ jobs:
       - name: Display input tag
         run: echo "tag=${{ inputs.tag }}"
 
+      - name: Component name
+        run: echo "component name=${{ inputs.component_name }}"
 
       - name: Check docker
         run: |
@@ -51,6 +56,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: crysis307/learn-kube:latest,crysis307/learn-kube:${{ github.sha }}
+          tags: crysis307/learn-kube:latest,crysis307/${{ inputs.component_name}}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
