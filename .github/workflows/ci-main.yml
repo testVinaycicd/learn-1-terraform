@@ -7,4 +7,4 @@ jobs:
       - name: check out repo
         uses: actions/checkout@v4
       - name: Printing statement
-        run: echo "hello world"
+        run: echo "hello world "
