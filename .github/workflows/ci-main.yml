@@ -32,4 +32,4 @@ jobs:
           fi
 
       - name: Build docker image
-        run: docker built -t crysis307/learn-kube:${{ inputs.tag }} .
+        run: docker build -t crysis307/learn-kube:${{ inputs.tag }} .
