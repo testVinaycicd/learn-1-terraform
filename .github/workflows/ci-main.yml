@@ -1,6 +1,6 @@
 name: CI MAIN
 
-on: [push,workflow_dispatch]
+on: workflow_call
 
 
 jobs:
