@@ -1,6 +1,11 @@
 name: CI MAIN
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: false
+        type: string
 
 
 jobs:
@@ -10,6 +15,8 @@ jobs:
       - name: Call from other repo
       - uses: actions/checkout@v5
 
+      - name: Display input tag
+        run: echo "tag=${{ inputs.tag }}"
 #      - name: Check docker
 #        run: |
 #          if command -v docker >/dev/null 2>&1; then
