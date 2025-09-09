@@ -6,7 +6,9 @@ on:
       tag:
         required: false
         type: string
-
+      secrets:
+        DTKN:
+          required: true
 
 jobs:
   build:
@@ -48,7 +50,7 @@ jobs:
         with:
           registry: docker.io
           username: crysis307
-          password: ${{ secrets.DTOKEN }}
+          password: ${{ secrets.DTKN }}
 
       - name: Build and push
         uses: docker/build-push-action@v5
