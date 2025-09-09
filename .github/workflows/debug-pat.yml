@@ -1,0 +1,31 @@
+name: Debug secrets via PAT
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug-pat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show context
+        run: |
+          echo "Repo: $GITHUB_REPOSITORY"
+          echo "Event: $GITHUB_EVENT_NAME"
+          echo "Ref: $GITHUB_REF"
+
+      - name: List repo secrets using DEBUG_PAT
+        env:
+          DEBUG_PAT: ${{ secrets.DEBUG_PAT }}
+          REPO: $GITHUB_REPOSITORY
+        run: |
+          url="https://api.github.com/repos/$REPO/actions/secrets"
+          echo "GET $url"
+          http_status=$(curl -s -o /tmp/secrets.json -w "%{http_code}" \
+            -H "Authorization: token $DEBUG_PAT" \
+            -H "Accept: application/vnd.github+json" \
+            "$url")
+          echo "HTTP status: $http_status"
+          echo "Response body:"
+          cat /tmp/secrets.json || true
+          echo "Parsed names:"
+          jq -r '.secrets[]?.name' /tmp/secrets.json || echo "no .secrets[].name"
