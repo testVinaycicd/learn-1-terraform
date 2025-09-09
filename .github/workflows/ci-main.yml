@@ -6,9 +6,9 @@ on:
       tag:
         required: false
         type: string
-      secrets:
-        DTKN:
-          required: true
+    secrets:
+      DTKN:
+        required: true
 
 jobs:
   build:
