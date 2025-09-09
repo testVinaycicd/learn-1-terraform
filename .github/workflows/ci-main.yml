@@ -1,10 +1,22 @@
-name: Testing actions
-on: push
+name: CI MAIN
+
+on: [push,workflow_dispatch]
+
+
 jobs:
-  Testing_actions:
+  testing-minikube:
     runs-on: ubuntu-latest
     steps:
-      - name: check out repo
-        uses: actions/checkout@v4
-      - name: Printing statement
-        run: echo "hello world "
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: install docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker.io
+          # start & enable
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          # check
+          docker --version
+          sudo docker run --rm hello-world
