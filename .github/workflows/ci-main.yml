@@ -17,18 +17,19 @@ jobs:
 
       - name: Display input tag
         run: echo "tag=${{ inputs.tag }}"
-#      - name: Check docker
-#        run: |
-#          if command -v docker >/dev/null 2>&1; then
-#            docker --version
-#          else
-#            echo "docker not found"
-#            # fallback install (use Docker repo method if you really need to)
-#            sudo apt-get update
-#            sudo apt-get install -y docker.io
-#            sudo systemctl start docker
-#            docker --version
-#          fi
-#
-#      - name: Set up buildx
-#        uses: docker/setup-buildx-action@v3
+
+      - name: Check docker
+        run: |
+          if command -v docker >/dev/null 2>&1; then
+            docker --version
+          else
+            echo "docker not found"
+            # fallback install (use Docker repo method if you really need to)
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            sudo systemctl start docker
+            docker --version
+          fi
+
+      - name: Build docker image
+        run: docker built -t crysis307/learn-kube:${{ inputs.tag }} .
