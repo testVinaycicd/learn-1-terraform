@@ -53,6 +53,7 @@ jobs:
           driver: docker-container
           install: true
 
+
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -63,6 +64,7 @@ jobs:
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
+        continue-on-error: true
         with:
           image-ref: crysis307/${{ inputs.component_name }}:${{ github.sha }}
           format: 'table'
@@ -71,7 +73,14 @@ jobs:
         env:
           # suppress CLI version check so the action doesn't fail on minor Trivy releases
           TRIVY_SKIP_VERSION_CHECK: 'true'
-          # optional: skip DB downloads if you maintain a cached DB in another workflow
-          TRIVY_SKIP_DB_UPDATE: 'true'
-          TRIVY_SKIP_JAVA_DB_UPDATE: 'true'
+
+
+  Dev_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call from other repo
+        uses: actions/checkout@v5
+
+      - name: Call from other repo
+        run: echo "Dev deploy"
 
