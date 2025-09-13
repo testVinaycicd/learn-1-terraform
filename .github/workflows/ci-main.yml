@@ -68,7 +68,7 @@ jobs:
         with:
           image-ref: crysis307/${{ inputs.component_name }}:${{ github.sha }}
           output: trivy-results.sarif
-          format: 'table'
+          format: "sarif"
           exit-code: '1'   # fail build on critical
           vuln-type: 'os,library'
         env:
