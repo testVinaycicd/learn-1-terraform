@@ -1,0 +1,23 @@
+name: SonarCloud Analysis
+
+on:
+  workflow_call:
+
+
+jobs:
+  sonar:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node (if needed)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: SonarCloud Scan
+        uses: sonarsource/sonarcloud-github-action@v2
+        with:
+          args: >
+#            get token
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+

@@ -1,0 +1,159 @@
+name: Ci - main
+on:
+  workflow_call:
+    inputs:
+      component_name:
+        required: true
+        type: string
+
+jobs:
+  Code-Quality-checks:
+    runs-on: self-hosted
+    steps:
+      - name: Check out repo code
+        uses: actions/checkout@v4
+
+      - name: Simple echo
+        run: echo "Code-Quality-checks"
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Cache Node modules
+        if: ${{ inputs.component_name == 'catalogue' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+  Test:
+    runs-on: self-hosted
+    needs: Code-Quality-checks
+    steps:
+      - name: Check out repo code
+        uses: actions/checkout@v4
+
+      - name: Simple echo
+        run: echo "Test"
+
+      - name: Install & test & lint JavaScript (frontend)
+        if: ${{ inputs.component_name == 'frontend' }}
+        working-directory: ./frontend-or-node-folder
+        run: |
+          npm ci
+          npm run lint || true   # set to fail by removing || true
+          npm test -- --reporter=jest-junit --reporter-options junitReporter.outputPath=reports/js-tests.xml || true
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/reports/*.xml
+            **/reports/*.json
+
+  gitleaks:
+    name: Gitleaks (secrets)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Gitleaks
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: detect --source . --report-format json --report-path reports/gitleaks.json
+      - name: Upload gitleaks report
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: reports/gitleaks.json
+
+  node-audit:
+    name: Node dependency scan
+    runs-on: ubuntu-latest
+    needs: gitleaks
+    # adjust the `if` to trigger only for relevant components or PRs; currently runs always
+    if: ${{ always() }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Install and run npm audit
+        working-directory: ./frontend-or-node-folder
+        run: |
+          npm ci
+          npm audit --json > reports/npm-audit.json || true
+          node -e "const a=require('./reports/npm-audit.json'); const high=(a.metadata?.vulnerabilities?.high)||0; if(high>0){console.error('High vulnerabilities found'); process.exit(1)}"
+      - name: Upload npm report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit
+          path: reports/npm-audit.json
+
+  python-audit:
+    name: Python dependency scan
+    runs-on: ubuntu-latest
+    needs: gitleaks
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+      - name: pip-audit
+        working-directory: ./python-backend
+        run: |
+          python -m pip install pip-audit
+          pip-audit --format json > reports/pip-audit.json || true
+      - name: Upload pip report
+        uses: actions/upload-artifact@v4
+        with:
+          name: pip-audit
+          path: reports/pip-audit.json
+
+  go-audit:
+    name: Go vuln scan
+    runs-on: ubuntu-latest
+    needs: gitleaks
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.21
+      - name: govulncheck
+        working-directory: ./go-service
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          govulncheck ./... -json > reports/govuln.json || true
+      - name: Upload govuln report
+        uses: actions/upload-artifact@v4
+        with:
+          name: govulncheck
+          path: reports/govuln.json
+
+  java-deps:
+    name: Java dependency-check
+    runs-on: ubuntu-latest
+    needs: gitleaks
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 17
+      - name: OWASP Dependency-Check
+        working-directory: ./java-service
+        run: |
+          mvn org.owasp:dependency-check-maven:check -Dformat=XML -DoutputDirectory=reports || true
+      - name: Upload dependency-check report
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check
+          path: java-service/reports

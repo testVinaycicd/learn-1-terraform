@@ -1,0 +1,30 @@
+name: Nightly Deep Scans
+
+on:
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC nightly
+  workflow_dispatch:
+
+jobs:
+  deep-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          format: json
+          output: results/trivy-fs.json
+      - name: OWASP Dep-Check (repo-wide)
+        run: |
+          # run via CLI or container for repo-wide scanning
+          docker run --rm -v "$PWD":/src owasp/dependency-check:latest --project "full-repo" --scan /src --format XML --out /src/reports
+      - name: Upload deep scan results
+        uses: actions/upload-artifact@v4
+        with:
+          name: deep-scan-reports
+          path: |
+            results/*
+            reports/*
+
