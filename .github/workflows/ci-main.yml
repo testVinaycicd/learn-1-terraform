@@ -67,6 +67,7 @@ jobs:
         continue-on-error: true
         with:
           image-ref: crysis307/${{ inputs.component_name }}:${{ github.sha }}
+          output: trivy-results.sarif
           format: 'table'
           exit-code: '1'   # fail build on critical
           vuln-type: 'os,library'
@@ -74,6 +75,10 @@ jobs:
           # suppress CLI version check so the action doesn't fail on minor Trivy releases
           TRIVY_SKIP_VERSION_CHECK: 'true'
 
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: trivy-results.sarif
 
   Dev_deploy:
     runs-on: ubuntu-latest
