@@ -1,8 +1,6 @@
 name: Nightly Deep Scans
 
 on:
-  schedule:
-    - cron: '0 3 * * *'  # 03:00 UTC nightly
   workflow_dispatch:
 
 jobs:
