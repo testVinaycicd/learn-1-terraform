@@ -65,22 +65,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          # set this if your Dockerfile isn't at repo root:
-          # file: ./Dockerfile
           push: true
-          provenance: true
-          # choose platforms you actually need; single arch is fastest:
-          platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: crysis307/${{ inputs.component_name }}:latest,crysis307/${{ inputs.component_name}}:${{ github.sha }}
           cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
 
-      - name: Move build cache
-        if: always()
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+
 
 
       - name: Scan image with Trivy
