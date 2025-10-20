@@ -39,6 +39,13 @@ jobs:
             docker --version
           fi
 
+      - name: Clean old buildx builders
+        run: |
+          docker buildx ls || true
+          docker buildx rm --all-inactive --force || true
+          docker ps -a --filter "name=buildx_buildkit" -q | xargs -r docker rm -f
+          docker network prune -f || true
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
         with:
@@ -46,21 +53,35 @@ jobs:
           username: crysis307
           password: ${{ secrets.DTKN }}
 
-      - name: Set up Docker Buildx (docker-container builder)
-
-        uses: docker/setup-buildx-action@v3
+      - name: Restore build cache
+        uses: actions/cache@v4
         with:
-          driver: docker-container
-          install: true
-
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
 
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          context: .
+          # set this if your Dockerfile isn't at repo root:
+          # file: ./Dockerfile
           push: true
-          tags: crysis307/${{ inputs.component_name }}:latest,crysis307/${{ inputs.component_name}}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          provenance: true
+          # choose platforms you actually need; single arch is fastest:
+          platforms: linux/amd64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      - name: Move build cache
+        if: always()
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
 
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
