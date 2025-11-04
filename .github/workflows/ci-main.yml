@@ -68,6 +68,19 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+      - name: Install yq
+        run: |
+          sudo yum install -y wget
+          sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Update values with new tag
+        run: |
+          FILE="/tmp/deploy/learn-helm/new helm/env-values-dev/${{ inputs.component_name }}.yaml"
+          yq -i '.image.repository = "ghcr.io/your-org/${{ inputs.component_name }}" | .image.tag = "${{ steps.vars.outputs.TAG }}"' "$FILE"
+      
+      
+
       - name: Scan image with Trivy
         uses: aquasecurity/trivy-action@master
         continue-on-error: true
